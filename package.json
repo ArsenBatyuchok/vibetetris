@@ -13,10 +13,12 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@types/simple-peer": "^9.11.8",
     "concurrently": "^9.2.0",
     "express": "^4.21.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "simple-peer": "^9.11.1",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1"
   },

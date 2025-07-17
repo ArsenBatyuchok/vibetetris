@@ -2,8 +2,10 @@ import React, { useEffect } from 'react';
 import { useGame } from '../useGame';
 import { useInput } from '../useInput';
 import { useMultiplayer } from '../hooks/useMultiplayer';
+import { useWebRTC } from '../hooks/useWebRTC';
 import { PlayerGame } from './PlayerGame';
 import { JoinPrompt } from './JoinPrompt';
+import { VideoChat } from './VideoChat';
 
 export const MultiplayerTetris: React.FC = () => {
   const { gameState, dispatch, actions } = useGame();
@@ -12,8 +14,22 @@ export const MultiplayerTetris: React.FC = () => {
     showJoinPrompt, 
     joinGame, 
     updateGameState, 
-    disconnect 
+    disconnect,
+    socket
   } = useMultiplayer();
+
+  // WebRTC for video/audio
+  const {
+    localStream,
+    remoteStreams,
+    localVideoRef,
+    isVideoEnabled,
+    isAudioEnabled,
+    joinCall,
+    leaveCall,
+    toggleVideo,
+    toggleAudio
+  } = useWebRTC(socket, multiplayerState.myPlayerId);
 
   // Set up input handling for the current player
   useInput({
@@ -79,6 +95,22 @@ export const MultiplayerTetris: React.FC = () => {
           />
         ))}
       </div>
+
+      {/* Video Chat Section */}
+      <VideoChat
+        players={multiplayerState.players}
+        myPlayerId={multiplayerState.myPlayerId}
+        localStream={localStream}
+        remoteStreams={remoteStreams}
+        localVideoRef={localVideoRef}
+        isVideoEnabled={isVideoEnabled}
+        isAudioEnabled={isAudioEnabled}
+        onJoinCall={joinCall}
+        onLeaveCall={leaveCall}
+        onToggleVideo={toggleVideo}
+        onToggleAudio={toggleAudio}
+        isInCall={!!localStream}
+      />
 
       {/* Controls Panel */}
       <div className="controls-panel">

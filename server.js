@@ -93,6 +93,29 @@ io.on('connection', (socket) => {
     }
   });
 
+  // WebRTC signaling
+  socket.on('webrtc-signal', ({ targetPlayerId, signal, fromPlayerId }) => {
+    socket.to(targetPlayerId).emit('webrtc-signal', {
+      fromPlayerId,
+      signal,
+      targetPlayerId
+    });
+  });
+
+  socket.on('join-video-call', ({ playerId }) => {
+    console.log(`Player ${playerId} joined video call`);
+    // Notify other players that this player joined the call
+    socket.broadcast.emit('player-joined-call', { playerId });
+    
+    // Tell this player about existing callers
+    socket.broadcast.emit('incoming-call', { fromPlayerId: playerId });
+  });
+
+  socket.on('leave-video-call', ({ playerId }) => {
+    console.log(`Player ${playerId} left video call`);
+    socket.broadcast.emit('player-left-call', { playerId });
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
     
@@ -100,6 +123,9 @@ io.on('connection', (socket) => {
       const player = players.get(socket.id);
       console.log(`Player left: ${player.username}`);
       players.delete(socket.id);
+      
+      // Notify about video call leave
+      socket.broadcast.emit('player-left-call', { playerId: socket.id });
       
       // Send updated players list to all remaining clients
       io.emit('players-update', Object.fromEntries(players));

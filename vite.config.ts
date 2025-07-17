@@ -5,6 +5,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   
+  // Define global variables for Node.js compatibility
+  define: {
+    global: 'globalThis',
+  },
+  
   // Make Vite less aggressive
   build: {
     // Disable minification for easier debugging
@@ -38,7 +43,7 @@ export default defineConfig({
   // Disable aggressive optimizations
   optimizeDeps: {
     // Force include all dependencies to avoid aggressive optimization
-    include: ['react', 'react-dom', 'socket.io-client']
+    include: ['react', 'react-dom', 'socket.io-client', 'simple-peer']
   },
   
   // Less aggressive TypeScript checking

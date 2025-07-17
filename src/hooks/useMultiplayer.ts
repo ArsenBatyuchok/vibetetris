@@ -138,6 +138,7 @@ export const useMultiplayer = () => {
     updateGameState,
     sendGameAction,
     disconnect,
-    connect
+    connect,
+    socket: socketRef.current
   };
 }; 
