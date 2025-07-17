@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Player } from '../types';
 import { PIECE_COLORS } from '../constants';
-import { placePieceOnBoard, getBoardWithGhost } from '../gameBoard';
+import { placePieceOnBoard, getBoardWithGhost, getGhostPiecePosition } from '../gameBoard';
+import { getInsetShadowStyle } from '../utils/colorUtils';
 
 interface PlayerGameProps {
   player: Player;
@@ -79,8 +80,11 @@ export const PlayerGame: React.FC<PlayerGameProps> = ({ player, isCurrentPlayer 
                   key={`${x}-${y}`}
                   className={`board-cell-mini ${cell ? 'filled' : 'empty'} ${cell === 'ghost' ? 'ghost' : ''}`}
                   style={{
-                    backgroundColor: cell ? PIECE_COLORS[cell] : PIECE_COLORS.null,
-                    opacity: cell === 'ghost' ? 0.3 : 1
+                    backgroundColor: cell === 'ghost' ? 
+                      (gameState.currentPiece ? PIECE_COLORS[gameState.currentPiece.type] : PIECE_COLORS.null) : 
+                      (cell ? PIECE_COLORS[cell] : PIECE_COLORS.null),
+                    opacity: cell === 'ghost' ? 0.3 : 1,
+                    boxShadow: cell && cell !== 'ghost' ? getInsetShadowStyle(cell) : 'none'
                   }}
                 />
               ))}

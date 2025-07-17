@@ -1,7 +1,8 @@
 import React from 'react';
 import type { TetrisPiece, CellType } from '../types';
 import { PIECE_COLORS } from '../constants';
-import { placePieceOnBoard, getBoardWithGhost } from '../gameBoard';
+import { placePieceOnBoard, getBoardWithGhost, getGhostPiecePosition } from '../gameBoard';
+import { getInsetShadowStyle } from '../utils/colorUtils';
 
 interface BoardProps {
   board: (CellType)[][];
@@ -31,8 +32,11 @@ export const Board: React.FC<BoardProps> = ({ board, currentPiece }) => {
               key={`${x}-${y}`}
               className={`board-cell ${cell ? 'filled' : 'empty'} ${cell === 'ghost' ? 'ghost' : ''}`}
               style={{
-                backgroundColor: cell ? PIECE_COLORS[cell] : PIECE_COLORS.null,
-                opacity: cell === 'ghost' ? 0.3 : 1
+                backgroundColor: cell === 'ghost' ? 
+                  (currentPiece ? PIECE_COLORS[currentPiece.type] : PIECE_COLORS.null) : 
+                  (cell ? PIECE_COLORS[cell] : PIECE_COLORS.null),
+                opacity: cell === 'ghost' ? 0.3 : 1,
+                boxShadow: cell && cell !== 'ghost' ? getInsetShadowStyle(cell) : 'none'
               }}
             />
           ))}

@@ -26,7 +26,7 @@
   padding: 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border: 2px solid transparent;
-  min-width: 280px;
+  min-width: 250px;
   max-width: 320px;
 }
 
@@ -136,10 +136,10 @@
 /* Game Board Container */
 .game-board-container {
   position: relative;
-  border-radius: 8px;
+  /* border-radius: 8px; */
   overflow: hidden;
-  background: #1a1a1a;
-  border: 2px solid #333;
+  background: #fffefe;
+  /* border: 2px solid #333; */
 }
 
 .game-board-mini {
@@ -155,20 +155,20 @@
 }
 
 .board-cell-mini {
+  border-radius: 3px;
   width: 25px;
   height: 25px;
-  border: 0.5px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgb(255, 255, 255);
   box-sizing: border-box;
 }
 
 .board-cell-mini.filled {
   border: 0.5px solid rgba(255, 255, 255, 0.3);
-  box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.2);
 }
 
-.board-cell-mini.ghost {
-  border: 0.5px solid rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.1) !important;
+
+.board-cell-mini.empty {
+  background: rgba(203, 202, 202, 0.709) !important;
 }
 
 /* Overlays */
