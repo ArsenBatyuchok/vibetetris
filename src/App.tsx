@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { MultiplayerTetris } from './components/MultiplayerTetris';
 import './MultiplayerTetris.css';
 

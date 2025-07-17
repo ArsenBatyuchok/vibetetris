@@ -1,10 +1,10 @@
-import type { TetrisPiece, GameState, PieceType } from './types';
+import type { TetrisPiece, GameState, CellType } from './types';
 import { POINTS, LINES_PER_LEVEL, INITIAL_DROP_TIME, MIN_DROP_TIME, DROP_TIME_DECREASE } from './constants';
 import { isValidPosition, placePieceOnBoard, clearLines, createEmptyBoard } from './gameBoard';
-import { createPiece, getRandomPieceType, rotatePiece, PIECE_SHAPES } from './pieces';
+import { createPiece, getRandomPieceType, rotatePiece } from './pieces';
 
 export const movePiece = (
-  board: (PieceType | null)[][],
+  board: (CellType)[][],
   piece: TetrisPiece,
   deltaX: number,
   deltaY: number
@@ -21,7 +21,7 @@ export const movePiece = (
 };
 
 export const tryRotatePiece = (
-  board: (PieceType | null)[][],
+  board: (CellType)[][],
   piece: TetrisPiece
 ): TetrisPiece | null => {
   const rotatedPiece = rotatePiece(piece);
@@ -58,7 +58,7 @@ export const tryRotatePiece = (
 };
 
 export const dropPiece = (
-  board: (PieceType | null)[][],
+  board: (CellType)[][],
   piece: TetrisPiece
 ): { piece: TetrisPiece, distance: number } => {
   let droppedPiece = piece;
@@ -116,7 +116,7 @@ export const getDropTime = (level: number): number => {
   return Math.max(dropTime, MIN_DROP_TIME);
 };
 
-export const isGameOver = (board: (PieceType | null)[][], piece: TetrisPiece): boolean => {
+export const isGameOver = (board: (CellType)[][], piece: TetrisPiece): boolean => {
   // Check if the new piece can be placed at spawn position
   return !isValidPosition(board, piece);
 };

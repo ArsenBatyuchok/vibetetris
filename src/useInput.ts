@@ -11,7 +11,7 @@ interface UseInputProps {
 
 export const useInput = ({ onAction, isPlaying, isPaused, isGameOver }: UseInputProps) => {
   const pressedKeysRef = useRef<Set<string>>(new Set());
-  const lastMoveTimeRef = useRef<{ [key: string]: number }>({});
+  // const lastMoveTimeRef = useRef<{ [key: string]: number }>({});
   const repeatIntervalRef = useRef<{ [key: string]: number }>({});
 
   const INITIAL_DELAY = 200; // Initial delay before repeat starts (ms)

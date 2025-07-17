@@ -1,16 +1,16 @@
 import React from 'react';
-import type { PieceType, TetrisPiece } from '../types';
+import type { TetrisPiece, CellType } from '../types';
 import { PIECE_COLORS } from '../constants';
 import { placePieceOnBoard, getBoardWithGhost } from '../gameBoard';
 
 interface BoardProps {
-  board: (PieceType | null)[][];
+  board: (CellType)[][];
   currentPiece: TetrisPiece | null;
 }
 
 export const Board: React.FC<BoardProps> = ({ board, currentPiece }) => {
   // Create display board with current piece and ghost piece
-  let displayBoard = [...board.map(row => [...row])];
+  let displayBoard: (CellType)[][] = [...board.map(row => [...row])];
   
   // Add ghost piece
   if (currentPiece) {

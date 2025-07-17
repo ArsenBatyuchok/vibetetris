@@ -1,4 +1,5 @@
 export type PieceType = 'I' | 'O' | 'T' | 'S' | 'Z' | 'J' | 'L';
+export type CellType = PieceType | 'ghost' | null;
 
 export interface Position {
   x: number;
@@ -13,7 +14,7 @@ export interface TetrisPiece {
 }
 
 export interface GameState {
-  board: (PieceType | null)[][];
+  board: (CellType)[][];
   currentPiece: TetrisPiece | null;
   nextPiece: TetrisPiece | null;
   score: number;

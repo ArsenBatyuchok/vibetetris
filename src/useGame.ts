@@ -5,7 +5,7 @@ import { createInitialGameState, movePiece, tryRotatePiece, dropPiece, lockPiece
 export const useGame = () => {
   const [gameState, setGameState] = useState<GameState>(createInitialGameState);
   const dropTimeRef = useRef<number>(0);
-  const gameLoopRef = useRef<number>();
+  const gameLoopRef = useRef<number | undefined>(undefined);
 
   // Game actions
   const startGame = useCallback(() => {

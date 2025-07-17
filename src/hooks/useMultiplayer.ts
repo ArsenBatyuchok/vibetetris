@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import type { Player, MultiplayerState, GameState, GameAction } from '../types';
-import { createInitialGameState } from '../gameMechanics';
+// import { createInitialGameState } from '../gameMechanics';
 
 export const useMultiplayer = () => {
   const [multiplayerState, setMultiplayerState] = useState<MultiplayerState>({
@@ -35,7 +35,7 @@ export const useMultiplayer = () => {
       setMultiplayerState(prev => ({
         ...prev,
         isConnected: true,
-        myPlayerId: socket.id
+        myPlayerId: socket.id || null
       }));
     });
 

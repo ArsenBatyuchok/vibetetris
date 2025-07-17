@@ -1,14 +1,14 @@
 import { BOARD_WIDTH, BOARD_HEIGHT } from './constants';
-import type { PieceType, TetrisPiece } from './types';
+import type { TetrisPiece, CellType } from './types';
 
-export const createEmptyBoard = (): (PieceType | null)[][] => {
+export const createEmptyBoard = (): (CellType)[][] => {
   return Array.from({ length: BOARD_HEIGHT }, () => 
     Array.from({ length: BOARD_WIDTH }, () => null)
   );
 };
 
 export const isValidPosition = (
-  board: (PieceType | null)[][],
+  board: (CellType)[][],
   piece: TetrisPiece,
   offsetX: number = 0,
   offsetY: number = 0
@@ -35,9 +35,9 @@ export const isValidPosition = (
 };
 
 export const placePieceOnBoard = (
-  board: (PieceType | null)[][],
+  board: (CellType)[][],
   piece: TetrisPiece
-): (PieceType | null)[][] => {
+): (CellType)[][] => {
   const newBoard = board.map(row => [...row]);
   
   for (let y = 0; y < piece.shape.length; y++) {
@@ -56,11 +56,11 @@ export const placePieceOnBoard = (
   return newBoard;
 };
 
-export const clearLines = (board: (PieceType | null)[][]): { 
-  newBoard: (PieceType | null)[][], 
+export const clearLines = (board: (CellType)[][]): { 
+  newBoard: (CellType)[][], 
   linesCleared: number 
 } => {
-  const newBoard: (PieceType | null)[][] = [];
+  const newBoard: (CellType)[][] = [];
   let linesCleared = 0;
   
   for (let y = BOARD_HEIGHT - 1; y >= 0; y--) {
@@ -82,7 +82,7 @@ export const clearLines = (board: (PieceType | null)[][]): {
 };
 
 export const getGhostPiecePosition = (
-  board: (PieceType | null)[][],
+  board: (CellType)[][],
   piece: TetrisPiece
 ): number => {
   let ghostY = piece.position.y;
@@ -95,10 +95,10 @@ export const getGhostPiecePosition = (
 };
 
 export const getBoardWithGhost = (
-  board: (PieceType | null)[][],
+  board: (CellType)[][],
   piece: TetrisPiece | null,
   currentPiece: TetrisPiece | null
-): (PieceType | null)[][] => {
+): (CellType)[][] => {
   if (!piece || !currentPiece) return board;
   
   const ghostY = getGhostPiecePosition(board, piece);
@@ -119,7 +119,7 @@ export const getBoardWithGhost = (
         
         if (boardY >= 0 && boardY < BOARD_HEIGHT && boardX >= 0 && boardX < BOARD_WIDTH) {
           if (!newBoard[boardY][boardX]) {
-            newBoard[boardY][boardX] = 'ghost' as PieceType;
+            newBoard[boardY][boardX] = 'ghost';
           }
         }
       }
