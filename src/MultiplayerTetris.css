@@ -95,11 +95,9 @@
 .next-cell {
   width: 12px;
   height: 12px;
-  border-radius: 1px;
 }
 
 .next-cell.filled {
-  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* Game Stats Mini */
