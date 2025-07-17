@@ -25,6 +25,7 @@ export const MultiplayerTetris: React.FC = () => {
     localVideoRef,
     isVideoEnabled,
     isAudioEnabled,
+    isInCall,
     joinCall,
     leaveCall,
     toggleVideo,
@@ -109,7 +110,7 @@ export const MultiplayerTetris: React.FC = () => {
         onLeaveCall={leaveCall}
         onToggleVideo={toggleVideo}
         onToggleAudio={toggleAudio}
-        isInCall={!!localStream}
+        isInCall={isInCall}
       />
 
       {/* Controls Panel */}

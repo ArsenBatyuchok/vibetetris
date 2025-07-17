@@ -1,9 +1,22 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    nodePolyfills({
+      // To add only specific polyfills, add them here. If no option is passed, adds all polyfills
+      include: ['stream', 'buffer', 'util'],
+      // Whether to polyfill specific globals
+      globals: {
+        Buffer: true,
+        global: true,
+        process: true,
+      },
+    })
+  ],
   
   // Define global variables for Node.js compatibility
   define: {

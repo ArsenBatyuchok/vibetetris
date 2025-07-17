@@ -69,6 +69,7 @@ export const VideoChat: React.FC<VideoChatProps> = ({
           {/* Local Video */}
           {currentPlayer && (
             <PlayerVideo
+              key={`local-${currentPlayer.id}`}
               player={currentPlayer}
               stream={localStream}
               isLocal={true}

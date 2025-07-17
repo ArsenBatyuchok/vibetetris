@@ -9,6 +9,7 @@ interface StreamState {
   isVideoEnabled: boolean;
   isAudioEnabled: boolean;
   isScreenSharing: boolean;
+  isInCall: boolean;
 }
 
 export const useWebRTC = (socket: Socket | null, myPlayerId: string | null) => {
@@ -18,7 +19,8 @@ export const useWebRTC = (socket: Socket | null, myPlayerId: string | null) => {
     peers: {},
     isVideoEnabled: true,
     isAudioEnabled: true,
-    isScreenSharing: false
+    isScreenSharing: false,
+    isInCall: false
   });
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -55,56 +57,86 @@ export const useWebRTC = (socket: Socket | null, myPlayerId: string | null) => {
 
   // Create peer connection
   const createPeer = useCallback((targetPlayerId: string, initiator: boolean, stream: MediaStream) => {
-    const peer = new Peer({
-      initiator,
-      trickle: false,
-      stream
-    });
+    // Don't create duplicate peers
+    if (peersRef.current[targetPlayerId]) {
+      console.log(`Peer already exists for ${targetPlayerId}`);
+      return peersRef.current[targetPlayerId];
+    }
 
-    peer.on('signal', (data) => {
-      if (socket) {
-        socket.emit('webrtc-signal', {
-          targetPlayerId,
-          signal: data,
-          fromPlayerId: myPlayerId
-        });
-      }
-    });
+    console.log(`Creating peer for ${targetPlayerId}, initiator: ${initiator}`);
 
-    peer.on('stream', (remoteStream) => {
-      setStreamState(prev => ({
-        ...prev,
-        remoteStreams: {
-          ...prev.remoteStreams,
-          [targetPlayerId]: remoteStream
+    try {
+      const peer = new Peer({
+        initiator,
+        trickle: false,
+        stream,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+          ]
         }
-      }));
-    });
-
-    peer.on('error', (error) => {
-      console.error('Peer error:', error);
-    });
-
-    peer.on('close', () => {
-      setStreamState(prev => {
-        const newRemoteStreams = { ...prev.remoteStreams };
-        delete newRemoteStreams[targetPlayerId];
-        
-        const newPeers = { ...prev.peers };
-        delete newPeers[targetPlayerId];
-        
-        return {
-          ...prev,
-          remoteStreams: newRemoteStreams,
-          peers: newPeers
-        };
       });
-    });
 
-    peersRef.current[targetPlayerId] = peer;
-    setStreamState(prev => ({ ...prev, peers: { ...prev.peers, [targetPlayerId]: peer } }));
+      peer.on('signal', (data) => {
+        console.log(`Sending signal to ${targetPlayerId}:`, data.type);
+        if (socket) {
+          socket.emit('webrtc-signal', {
+            targetPlayerId,
+            signal: data,
+            fromPlayerId: myPlayerId
+          });
+        }
+      });
 
-    return peer;
+      peer.on('stream', (remoteStream) => {
+        console.log(`Received stream from ${targetPlayerId}`);
+        setStreamState(prev => ({
+          ...prev,
+          remoteStreams: {
+            ...prev.remoteStreams,
+            [targetPlayerId]: remoteStream
+          }
+        }));
+      });
+
+      peer.on('connect', () => {
+        console.log(`Peer connected to ${targetPlayerId}`);
+      });
+
+      peer.on('error', (error) => {
+        console.error(`Peer error for ${targetPlayerId}:`, error);
+        // Clean up on error
+        if (peersRef.current[targetPlayerId]) {
+          delete peersRef.current[targetPlayerId];
+        }
+      });
+
+      peer.on('close', () => {
+        console.log(`Peer closed for ${targetPlayerId}`);
+        setStreamState(prev => {
+          const newRemoteStreams = { ...prev.remoteStreams };
+          delete newRemoteStreams[targetPlayerId];
+          
+          const newPeers = { ...prev.peers };
+          delete newPeers[targetPlayerId];
+          
+          return {
+            ...prev,
+            remoteStreams: newRemoteStreams,
+            peers: newPeers
+          };
+        });
+      });
+
+      peersRef.current[targetPlayerId] = peer;
+      setStreamState(prev => ({ ...prev, peers: { ...prev.peers, [targetPlayerId]: peer } }));
+
+      return peer;
+    } catch (error) {
+      console.error('Failed to create peer:', error);
+      return null;
+    }
   }, [socket, myPlayerId]);
 
   // Handle WebRTC signaling
@@ -114,20 +146,32 @@ export const useWebRTC = (socket: Socket | null, myPlayerId: string | null) => {
     const handleWebRTCSignal = ({ fromPlayerId, signal, targetPlayerId }: any) => {
       if (targetPlayerId !== myPlayerId) return;
 
+      console.log(`Received signal from ${fromPlayerId}:`, signal.type);
       const peer = peersRef.current[fromPlayerId];
       if (peer) {
-        peer.signal(signal);
+        try {
+          peer.signal(signal);
+        } catch (error) {
+          console.error('Error signaling peer:', error);
+        }
+      } else {
+        console.warn(`No peer found for ${fromPlayerId} when receiving signal`);
       }
     };
 
     const handlePlayerJoined = async ({ playerId }: { playerId: string }) => {
-      if (playerId === myPlayerId || !streamState.localStream) return;
-
-      // Create peer as initiator for new players
-      createPeer(playerId, true, streamState.localStream);
+      if (playerId === myPlayerId || !streamState.isInCall || !streamState.localStream) return;
+      
+      console.log(`Player ${playerId} joined call`);
+      
+      // Only create peer if we are the initiator (lower playerId initiates)
+      if (myPlayerId && myPlayerId < playerId) {
+        createPeer(playerId, true, streamState.localStream);
+      }
     };
 
     const handlePlayerLeft = ({ playerId }: { playerId: string }) => {
+      console.log(`Player ${playerId} left call`);
       const peer = peersRef.current[playerId];
       if (peer) {
         peer.destroy();
@@ -149,43 +193,57 @@ export const useWebRTC = (socket: Socket | null, myPlayerId: string | null) => {
       });
     };
 
-    const handleCallUser = async ({ fromPlayerId }: { fromPlayerId: string }) => {
-      if (!streamState.localStream) return;
-
-      // Create peer as receiver
-      createPeer(fromPlayerId, false, streamState.localStream);
+    const handleIncomingCall = ({ fromPlayerId }: { fromPlayerId: string }) => {
+      if (!streamState.isInCall || !streamState.localStream) return;
+      
+      console.log(`Incoming call from ${fromPlayerId}`);
+      
+      // Only create peer if we are not the initiator (higher playerId receives)
+      if (myPlayerId && myPlayerId > fromPlayerId) {
+        createPeer(fromPlayerId, false, streamState.localStream);
+      }
     };
 
     socket.on('webrtc-signal', handleWebRTCSignal);
     socket.on('player-joined-call', handlePlayerJoined);
     socket.on('player-left-call', handlePlayerLeft);
-    socket.on('incoming-call', handleCallUser);
+    socket.on('incoming-call', handleIncomingCall);
 
     return () => {
       socket.off('webrtc-signal', handleWebRTCSignal);
       socket.off('player-joined-call', handlePlayerJoined);
       socket.off('player-left-call', handlePlayerLeft);
-      socket.off('incoming-call', handleCallUser);
+      socket.off('incoming-call', handleIncomingCall);
     };
-  }, [socket, myPlayerId, streamState.localStream, createPeer]);
+  }, [socket, myPlayerId, streamState.localStream, streamState.isInCall, createPeer]);
 
   // Join video call
   const joinCall = useCallback(async () => {
+    console.log('Joining video call...');
     const stream = await initializeMedia();
-    if (stream && socket) {
+    if (stream && socket && myPlayerId) {
+      setStreamState(prev => ({ ...prev, isInCall: true }));
       socket.emit('join-video-call', { playerId: myPlayerId });
     }
   }, [initializeMedia, socket, myPlayerId]);
 
   // Leave video call
   const leaveCall = useCallback(() => {
+    console.log('Leaving video call...');
+    
     // Stop local stream
     if (streamState.localStream) {
       streamState.localStream.getTracks().forEach(track => track.stop());
     }
 
     // Close all peer connections
-    Object.values(peersRef.current).forEach(peer => peer.destroy());
+    Object.values(peersRef.current).forEach(peer => {
+      try {
+        peer.destroy();
+      } catch (error) {
+        console.error('Error destroying peer:', error);
+      }
+    });
     peersRef.current = {};
 
     setStreamState({
@@ -194,10 +252,11 @@ export const useWebRTC = (socket: Socket | null, myPlayerId: string | null) => {
       peers: {},
       isVideoEnabled: true,
       isAudioEnabled: true,
-      isScreenSharing: false
+      isScreenSharing: false,
+      isInCall: false
     });
 
-    if (socket) {
+    if (socket && myPlayerId) {
       socket.emit('leave-video-call', { playerId: myPlayerId });
     }
   }, [streamState.localStream, socket, myPlayerId]);
@@ -230,7 +289,13 @@ export const useWebRTC = (socket: Socket | null, myPlayerId: string | null) => {
       if (streamState.localStream) {
         streamState.localStream.getTracks().forEach(track => track.stop());
       }
-      Object.values(peersRef.current).forEach(peer => peer.destroy());
+      Object.values(peersRef.current).forEach(peer => {
+        try {
+          peer.destroy();
+        } catch (error) {
+          console.error('Error destroying peer on cleanup:', error);
+        }
+      });
     };
   }, []);
 
