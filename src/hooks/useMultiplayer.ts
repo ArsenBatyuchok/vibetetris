@@ -22,14 +22,13 @@ export const useMultiplayer = () => {
         return import.meta.env.VITE_SERVER_URL;
       }
       
-      // In production (HTTPS), use the same origin
-      if (window.location.protocol === 'https:') {
-        return window.location.origin; // Uses same domain, HTTPS, no port
+      // In production/deployment, connect to same origin (no separate port)
+      if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        return window.location.origin; // Production: same domain, same port, same protocol
       }
       
-      // In development, use HTTP with port 3001
-      const currentHost = window.location.hostname;
-      return `http://${currentHost}:3001`;
+      // Local development only
+      return 'http://localhost:3001';
     };
 
     const socket = io(getServerUrl());
